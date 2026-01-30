@@ -1,2 +1,2 @@
 # CARNIVALGAME-SOFTWARE
-Welcome to the Carnival Game Repository!
+Welcome to the New Carnival Game Repository!
