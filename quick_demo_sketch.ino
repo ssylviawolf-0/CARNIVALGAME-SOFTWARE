@@ -4,7 +4,7 @@
 
 //////////////////////////////////////////////////////////////////////
 #include <FastLED.h>
-
+//PWR->SCL22, GND->53
 
 #define LED_PIN     A12
 #define LED_COUNT   40
@@ -17,9 +17,9 @@ CRGB leds[LED_COUNT];
 
 
 uint8_t currentPattern = 0;
-const uint8_t totalPatterns = 5;   // how many patterns you have
+const uint8_t totalPatterns = 11;   // how many patterns you have
 unsigned long lastSwitch = 0;
-const unsigned long patternInterval = 5000; // change every
+const unsigned long patternInterval = 5000; // change every 5 seconds
 ///////////////////////////////////////////////////////////////////////
 
 // Define pin connections for Motor 1
@@ -247,20 +247,6 @@ void confetti() {
 }
 
 
-void fillWipe() {
-  static int i = 0;
-  static bool forward = true;
-  if (forward) {
-    leds[i++] = CRGB::Blue;
-    if (i >= LED_COUNT) forward = false;
-  } else {
-    leds[--i] = CRGB::Black;
-    if (i <= 0) forward = true;
-  }
-  FastLED.show();
-}
-
-
 void pulse() {
   static uint8_t brightness = 0;
   static int8_t direction = 1;
@@ -268,6 +254,108 @@ void pulse() {
   if (brightness == 0 || brightness == 255) direction = -direction;
   fill_solid(leds, LED_COUNT, CHSV(0, 0, brightness)); // white pulse
   FastLED.show();
+}
+// Sparkle - Random LEDs flash white briefly
+void sparkle() {
+  fill_solid(leds, LED_COUNT, CRGB::Black);
+  int pos = random16(LED_COUNT);
+  leds[pos] = CRGB::White;
+  FastLED.show();
+  delay(50);
+}
+// Fire - Flickering flame effect
+void fire() {
+  static byte heat[LED_COUNT];
+  // Cool down every cell a little
+  for(int i = 0; i < LED_COUNT; i++) {
+    heat[i] = qsub8(heat[i], random8(0, ((55 * 10) / LED_COUNT) + 2));
+  }
+  // Heat from each cell drifts up and diffuses
+  for(int k = LED_COUNT - 1; k >= 2; k--) {
+    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+  }
+// Randomly ignite new sparks near bottom
+  if(random8() < 120) {
+    int y = random8(7);
+    heat[y] = qadd8(heat[y], random8(160, 255));
+  }
+  // Convert heat to LED colors
+  for(int j = 0; j < LED_COUNT; j++) {
+    byte temperature = heat[j];
+    byte t192 = scale8_video(temperature, 192);
+    byte heatramp = t192 & 0x3F;
+    heatramp <<= 2;
+    if(t192 & 0x80) {
+      leds[j] = CRGB(255, 255, heatramp);
+    } else if(t192 & 0x40) {
+      leds[j] = CRGB(255, heatramp, 0);
+    } else {
+      leds[j] = CRGB(heatramp, 0, 0);
+    }
+  }
+  FastLED.show();
+}
+// Theater Chase - Classic marquee style
+void theaterChase() {
+  static uint8_t offset = 0;
+  static uint8_t hue = 0;
+  for(int i = 0; i < LED_COUNT; i++) {
+    if((i + offset) % 3 == 0) {
+      leds[i] = CHSV(hue, 255, 255);
+    } else {
+      leds[i] = CRGB::Black;
+    }
+  }
+  FastLED.show();
+  offset = (offset + 1) % 3;
+  hue += 2;
+}
+// Comet - A bright tail that travels
+void comet() {
+  static int pos = 0;
+  static uint8_t hue = 0;
+  fadeToBlackBy(leds, LED_COUNT, 64);
+  leds[pos] = CHSV(hue, 255, 255);
+  FastLED.show();
+  pos = (pos + 1) % LED_COUNT;
+  hue++;
+}
+// Twinkle - Multiple random LEDs gently fade in and out
+void twinkle() {
+  fadeToBlackBy(leds, LED_COUNT, 32);
+  if(random8() < 80) {
+    int pos = random16(LED_COUNT);
+    leds[pos] = CHSV(random8(), 200, 255);
+  }
+  FastLED.show();
+}
+// Color Wave - Smooth wave of changing colors
+void colorWave() {
+  static uint8_t offset = 0;
+  for(int i = 0; i < LED_COUNT; i++) {
+    uint8_t hue = (i * 256 / LED_COUNT) + offset;
+    leds[i] = CHSV(hue, 255, 200);
+  }
+  FastLED.show();
+  offset += 2;
+}
+// Dual Scanner - Two dots bouncing back and forth
+void dualScanner() {
+  static int pos1 = 0;
+  static int pos2 = LED_COUNT / 2;
+  static int dir1 = 1;
+  static int dir2 = 1;
+  
+  fadeToBlackBy(leds, LED_COUNT, 64);
+  leds[pos1] = CRGB::Red;
+  leds[pos2] = CRGB::Blue;
+  FastLED.show();
+  
+  pos1 += dir1;
+  pos2 += dir2;
+  
+  if(pos1 <= 0 || pos1 >= LED_COUNT - 1) dir1 = -dir1;
+  if(pos2 <= 0 || pos2 >= LED_COUNT - 1) dir2 = -dir2;
 }
 
 
@@ -277,9 +365,16 @@ void runPattern(uint8_t p) {
     case 0: rainbowFlow(); break;
     case 1: chaser(); break;
     case 2: confetti(); break;
-    case 3: fillWipe(); break;
-    case 4: pulse(); break;
+    case 3: pulse(); break;
+    case 4: sparkle(); break;
+    case 5: fire(); break;
+    case 6: theaterChase(); break;
+    case 7: comet(); break;
+    case 8: twinkle(); break;
+    case 9: colorWave(); break;
+    case 10: dualScanner(); break;
   }
+
 }
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -363,4 +458,5 @@ void loop() {
       Resetting = false;
     }
   }
+
 }
