@@ -1,9 +1,10 @@
 #include <SoftwareSerial.h>
 #include <TMCStepper.h>
 #include <AccelStepper.h>
+#include <FastLED.h>
 
 //CUSTOM PIN NAMES-----------------------------------------------------------------
-  //Pins used forconnection with motor contoller 1
+  //Pins used for connection with motor contoller 1
   #define STEP_PIN1 3
   #define DIR_PIN1 2
   #define ENBL_PIN1 7
@@ -36,6 +37,13 @@
   #define LED1 53
   #define LED2 45
   #define LED3 37
+
+  //Pins used for display LED strip + led strip specifications
+  #define LED_PIN     A12
+  #define LED_COUNT   39  
+  #define LED_TYPE    WS2812B
+  #define COLOR_ORDER GRB
+  #define BRIGHTNESS  128
 
 //CUSTOM CONSTANTS-----------------------------------------------------------------
   #define PRESSURE_THRESHOLD 500   // analog value below this is considered "low"
@@ -295,7 +303,69 @@ void setup() {
   led1.on();                     // LED1 always on
   updateModeLEDs();             // initial LED states
 }
+///////////////////////////////////////////////////////////////////////////////////
+void rainbowFlow() {
+  static uint8_t hue = 0;
+  fill_rainbow(leds, LED_COUNT, hue, 255 / LED_COUNT);
+  FastLED.show();
+  hue++;
+}
 
+
+void chaser() {
+  static uint8_t pos = 0;
+  fill_solid(leds, LED_COUNT, CRGB::Black);
+  leds[pos] = CRGB::Yellow;
+  leds[(pos + 1) % LED_COUNT] = CRGB::Orange;
+  leds[(pos + 2) % LED_COUNT] = CRGB::Red;
+  FastLED.show();
+  pos = (pos + 1) % LED_COUNT;
+}
+
+
+void confetti() {
+  fadeToBlackBy(leds, LED_COUNT, 10);
+  int pos = random16(LED_COUNT);
+  leds[pos] += CHSV(random8(), 255, 255);
+  FastLED.show();
+}
+
+
+void fillWipe() {
+  static int i = 0;
+  static bool forward = true;
+  if (forward) {
+    leds[i++] = CRGB::Blue;
+    if (i >= LED_COUNT) forward = false;
+  } else {
+    leds[--i] = CRGB::Black;
+    if (i <= 0) forward = true;
+  }
+  FastLED.show();
+}
+
+
+void pulse() {
+  static uint8_t brightness = 0;
+  static int8_t direction = 1;
+  brightness += direction * 4;
+  if (brightness == 0 || brightness == 255) direction = -direction;
+  fill_solid(leds, LED_COUNT, CHSV(0, 0, brightness)); // white pulse
+  FastLED.show();
+}
+
+
+// ---- call the right one based on index ----
+void runPattern(uint8_t p) {
+  switch (p) {
+    case 0: rainbowFlow(); break;
+    case 1: chaser(); break;
+    case 2: confetti(); break;
+    case 3: fillWipe(); break;
+    case 4: pulse(); break;
+  }
+}
+//LED Strip Independant Patterns
 void loop() {
   // --- Emergency stop: press and hold for HOLD_DISABLE_TIME ---
   static bool emergencyStopTriggered = false;
