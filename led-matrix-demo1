@@ -1,0 +1,315 @@
+/*
+ * 8x32 WS2812B LED Matrix - X,Y Coordinate Patterns
+ * 
+ * This sketch demonstrates how to address individual LEDs using X,Y coordinates
+ * and creates various visual patterns on the matrix.
+ * 
+ * Hardware:
+ * - Arduino Mega
+ * - 8x32 WS2812B LED Matrix (256 pixels)
+ * - 5V Power Supply (adequate amperage)
+ * 
+ * Connections:
+ * - LED Matrix DIN -> Arduino Pin 6
+ * - LED Matrix 5V -> External 5V Power Supply (+)
+ * - LED Matrix GND -> External Power Supply (-) AND Arduino GND
+ * 
+ * Library Required:
+ * - FastLED
+ */
+
+#include <FastLED.h>
+
+// LED Matrix Configuration
+#define LED_PIN     13
+#define NUM_LEDS    256
+#define MATRIX_WIDTH  32
+#define MATRIX_HEIGHT 8
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER GRB
+#define BRIGHTNESS  5
+
+// Create LED array
+CRGB leds[NUM_LEDS];
+
+// Matrix wiring pattern - change this if your matrix is wired differently
+#define SERPENTINE_LAYOUT true  // Set to false if your matrix uses progressive layout
+
+// ========================================
+// XY() - Convert X,Y coordinates to LED array index
+// ========================================
+uint16_t XY(uint8_t x, uint8_t y) {
+  uint16_t i;
+  
+  // Check bounds
+  if(x >= MATRIX_WIDTH) return 0;
+  if(y >= MATRIX_HEIGHT) return 0;
+  
+  if(SERPENTINE_LAYOUT) {
+    // Serpentine/zig-zag pattern (most common)
+    if(y & 0x01) {  // Odd rows run backwards
+      uint8_t reverseX = (MATRIX_WIDTH - 1) - x;
+      i = (y * MATRIX_WIDTH) + reverseX;
+    } else {        // Even rows run forwards
+      i = (y * MATRIX_WIDTH) + x;
+    }
+  } else {
+    // Progressive pattern (all rows left to right)
+    i = (y * MATRIX_WIDTH) + x;
+  }
+  
+  return i;
+}
+
+// ========================================
+// Helper function to clear the matrix
+// ========================================
+void clearMatrix() {
+  FastLED.clear();
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 1: Draw corners
+// ========================================
+void drawCorners() {
+  clearMatrix();
+  
+  leds[XY(0, 0)] = CRGB::Red;              // Top-left
+  leds[XY(31, 0)] = CRGB::Green;           // Top-right
+  leds[XY(0, 7)] = CRGB::Blue;             // Bottom-left
+  leds[XY(31, 7)] = CRGB::Yellow;          // Bottom-right
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 2: Draw a border
+// ========================================
+void drawBorder() {
+  clearMatrix();
+  
+  // Top and bottom edges
+  for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+    leds[XY(x, 0)] = CRGB::Cyan;           // Top row
+    leds[XY(x, 7)] = CRGB::Cyan;           // Bottom row
+  }
+  
+  // Left and right edges
+  for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+    leds[XY(0, y)] = CRGB::Magenta;        // Left column
+    leds[XY(31, y)] = CRGB::Magenta;       // Right column
+  }
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 3: Draw a horizontal line
+// ========================================
+void drawHorizontalLine(uint8_t row, CRGB color) {
+  clearMatrix();
+  
+  for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+    leds[XY(x, row)] = color;
+  }
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 4: Draw a vertical line
+// ========================================
+void drawVerticalLine(uint8_t col, CRGB color) {
+  clearMatrix();
+  
+  for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+    leds[XY(col, y)] = color;
+  }
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 5: Draw a checkerboard
+// ========================================
+void drawCheckerboard() {
+  clearMatrix();
+  
+  for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+    for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+      if((x + y) % 2 == 0) {
+        leds[XY(x, y)] = CRGB::White;
+      } else {
+        leds[XY(x, y)] = CRGB::Black;
+      }
+    }
+  }
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 6: Rainbow gradient
+// ========================================
+void drawRainbowGradient() {
+  clearMatrix();
+  
+  for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+    // Calculate hue based on position (0-255)
+    uint8_t hue = map(x, 0, MATRIX_WIDTH - 1, 0, 255);
+    
+    // Fill entire column with same color
+    for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+      leds[XY(x, y)] = CHSV(hue, 255, 255);
+    }
+  }
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 7: Moving dot
+// ========================================
+void movingDot() {
+  for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+    clearMatrix();
+    leds[XY(x, 4)] = CRGB::Red;  // Middle row
+    FastLED.show();
+    delay(50);
+  }
+}
+
+// ========================================
+// PATTERN 8: Fill rows sequentially
+// ========================================
+void fillRowsSequentially() {
+  clearMatrix();
+  
+  CRGB colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, 
+                   CRGB::Blue, CRGB::Indigo, CRGB::Violet, CRGB::White};
+  
+  for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+    for(uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+      leds[XY(x, y)] = colors[y];
+    }
+    FastLED.show();
+    delay(300);
+  }
+}
+
+// ========================================
+// PATTERN 9: Draw a smiley face
+// ========================================
+void drawSmiley() {
+  clearMatrix();
+  
+  // Eyes
+  leds[XY(8, 2)] = CRGB::Yellow;
+  leds[XY(9, 2)] = CRGB::Yellow;
+  leds[XY(22, 2)] = CRGB::Yellow;
+  leds[XY(23, 2)] = CRGB::Yellow;
+  
+  // Smile
+  leds[XY(10, 5)] = CRGB::Yellow;
+  leds[XY(11, 6)] = CRGB::Yellow;
+  leds[XY(12, 6)] = CRGB::Yellow;
+  leds[XY(13, 6)] = CRGB::Yellow;
+  leds[XY(14, 6)] = CRGB::Yellow;
+  leds[XY(15, 6)] = CRGB::Yellow;
+  leds[XY(16, 6)] = CRGB::Yellow;
+  leds[XY(17, 6)] = CRGB::Yellow;
+  leds[XY(18, 6)] = CRGB::Yellow;
+  leds[XY(19, 6)] = CRGB::Yellow;
+  leds[XY(20, 6)] = CRGB::Yellow;
+  leds[XY(21, 5)] = CRGB::Yellow;
+  
+  FastLED.show();
+}
+
+// ========================================
+// PATTERN 10: Scanning line animation
+// ========================================
+void scanningLine() {
+  // Scan down
+  for(uint8_t y = 0; y < MATRIX_HEIGHT; y++) {
+    clearMatrix();
+    drawHorizontalLine(y, CRGB::Green);
+    delay(100);
+  }
+  
+  // Scan up
+  for(int y = MATRIX_HEIGHT - 1; y >= 0; y--) {
+    clearMatrix();
+    drawHorizontalLine(y, CRGB::Blue);
+    delay(100);
+  }
+}
+
+// ========================================
+// Setup
+// ========================================
+void setup() {
+  Serial.begin(9600);
+  Serial.println("8x32 LED Matrix - X,Y Pattern Demo");
+  
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+  FastLED.clear();
+  FastLED.show();
+  
+  delay(1000);
+}
+
+// ========================================
+// Main Loop - Cycle through patterns
+// ========================================
+void loop() {
+  Serial.println("Pattern 1: Corners");
+  drawCorners();
+  delay(2000);
+  
+  Serial.println("Pattern 2: Border");
+  drawBorder();
+  delay(2000);
+  
+  Serial.println("Pattern 3: Horizontal Lines");
+  for(uint8_t row = 0; row < MATRIX_HEIGHT; row++) {
+    drawHorizontalLine(row, CRGB::Red);
+    delay(300);
+  }
+  delay(1000);
+  
+  Serial.println("Pattern 4: Vertical Lines");
+  for(uint8_t col = 0; col < MATRIX_WIDTH; col += 4) {
+    drawVerticalLine(col, CRGB::Blue);
+    delay(300);
+  }
+  delay(1000);
+  
+  Serial.println("Pattern 5: Checkerboard");
+  drawCheckerboard();
+  delay(2000);
+  
+  Serial.println("Pattern 6: Rainbow Gradient");
+  drawRainbowGradient();
+  delay(3000);
+  
+  Serial.println("Pattern 7: Moving Dot");
+  movingDot();
+  delay(1000);
+  
+  Serial.println("Pattern 8: Fill Rows");
+  fillRowsSequentially();
+  delay(2000);
+  
+  Serial.println("Pattern 9: Smiley Face");
+  drawSmiley();
+  delay(3000);
+  
+  Serial.println("Pattern 10: Scanning Line");
+  scanningLine();
+  delay(1000);
+  
+  Serial.println("---Restarting patterns---\n");
+}
