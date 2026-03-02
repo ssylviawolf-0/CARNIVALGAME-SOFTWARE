@@ -1,1 +1,34 @@
+#include <FastLED.h>
 
+// LED Matrix Configuration
+#define LED_PIN     13
+#define NUM_LEDS    256
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER GRB
+#define BRIGHTNESS  50
+
+// Create LED array
+CRGB leds[NUM_LEDS];
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("8x32 LED Matrix - Blinking White");
+  
+  // Initialize FastLED
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+  FastLED.clear();
+  FastLED.show();
+}
+
+void loop() {
+  // Turn all LEDs white
+  fill_solid(leds, NUM_LEDS, CRGB::White);
+  FastLED.show();
+  delay(500);  // On for 500ms
+  
+  // Turn all LEDs off
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+  FastLED.show();
+  delay(500);  // Off for 500ms
+}
