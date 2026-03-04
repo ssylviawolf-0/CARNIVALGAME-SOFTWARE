@@ -1,0 +1,138 @@
+/*
+ * 8x32 WS2812B LED Matrix - X,Y Coordinate Patterns
+ * 
+ * This sketch demonstrates how to address individual LEDs using X,Y coordinates
+ * and creates various visual patterns on the matrix.
+ * 
+ * Hardware:
+ * - Arduino Mega
+ * - 8x32 WS2812B LED Matrix (256 pixels)
+ * - 5V Power Supply (adequate amperage)
+ * 
+ * Connections:
+ * - LED Matrix DIN -> Arduino Pin 6
+ * - LED Matrix 5V -> External 5V Power Supply (+)
+ * - LED Matrix GND -> External Power Supply (-) AND Arduino GND
+ * 
+ * Library Required:
+ * - FastLED
+ */
+
+#include <FastLED.h>
+
+// LED Matrix Configuration
+#define LED_PIN     13
+#define NUM_LEDS    256
+#define MATRIX_WIDTH  8
+#define MATRIX_HEIGHT 32
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER GRB
+#define BRIGHTNESS  1
+
+// Create LED array
+CRGB leds[NUM_LEDS];
+
+// Matrix wiring pattern - change this if your matrix is wired differently
+#define SERPENTINE_LAYOUT true  // Set to false if your matrix uses progressive layout
+
+// ========================================
+// XY() - Convert X,Y coordinates to LED array index
+// ========================================
+uint16_t XY(uint8_t x, uint8_t y) {
+  uint16_t i;
+  
+  // Check bounds
+  if(x >= MATRIX_WIDTH) return 0;
+  if(y >= MATRIX_HEIGHT) return 0;
+  
+  if(SERPENTINE_LAYOUT) {
+    // Serpentine/zig-zag pattern (most common)
+    if(y & 0x01) {  // Odd rows run backwards
+      uint8_t reverseX = (MATRIX_WIDTH - 1) - x;
+      i = (y * MATRIX_WIDTH) + reverseX;
+    } else {        // Even rows run forwards
+      i = (y * MATRIX_WIDTH) + x;
+    }
+  } else {
+    // Progressive pattern (all rows left to right)
+    i = (y * MATRIX_WIDTH) + x;
+  }
+  
+  return i;
+}
+
+// ========================================
+// Helper function to clear the matrix
+// ========================================
+void clearMatrix() {
+  FastLED.clear();
+  FastLED.show();
+}
+
+
+// ========================================
+// PATTERN 9: Draw a smiley face
+// ========================================
+void drawSmiley() {
+  clearMatrix();
+  
+  // Eyes
+  leds[XY(3,6)] = CRGB::Yellow;
+  leds[XY(4,6)] = CRGB::Yellow;
+
+  leds[XY(3,13)] = CRGB::Yellow;
+  leds[XY(4,13)] = CRGB::Yellow;
+  
+  // Smile
+  leds[XY(6, 7)] = CRGB::Yellow;
+  leds[XY(7, 7)] = CRGB::Yellow;
+  
+  leds[XY(7, 8)] = CRGB::Yellow;
+  leds[XY(7, 9)] = CRGB::Yellow;
+  leds[XY(7, 10)] = CRGB::Yellow;
+  leds[XY(7, 11)] = CRGB::Yellow;
+
+  leds[XY(6, 11)] = CRGB::Yellow;
+  
+  
+  FastLED.show();
+}
+
+void draw() {
+  clearMatrix();
+  
+  // Eyes
+  leds[XY(0,0)] = CRGB::Yellow;
+  leds[XY(1,0)] = CRGB::Yellow;
+  
+  FastLED.show();
+}
+
+
+// ========================================
+// Setup
+// ========================================
+void setup() {
+  Serial.begin(9600);
+  Serial.println("8x32 LED Matrix - X,Y Pattern Demo");
+  
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+  FastLED.clear();
+  FastLED.show();
+  
+  delay(1000);
+}
+
+// ========================================
+// Main Loop - Cycle through patterns
+// ========================================
+void loop() {
+  
+  
+  Serial.println("Pattern 9: Smiley Face");
+  drawSmiley();
+  delay(3000);
+  
+  Serial.println("---Restarting patterns---\n");
+}
