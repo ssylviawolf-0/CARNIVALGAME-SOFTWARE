@@ -1,0 +1,121 @@
+
+#include <FastLED.h>
+
+#define LED_PIN     13
+#define WIDTH       32
+#define HEIGHT      8
+#define NUM_LEDS    (WIDTH * HEIGHT)
+
+CRGB leds[NUM_LEDS];
+
+int XY(int x, int y) {
+  if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+    return -1;
+  }
+  
+  if (y % 2 == 0) {
+    return y * WIDTH + x;
+  } else {
+    return y * WIDTH + (WIDTH - 1 - x);
+  }
+}
+
+void setup() {
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setBrightness(5);
+}
+
+void loop() {
+
+  // Example 1: Light up specific LEDs by array index
+  FastLED.clear();
+  leds[0] = CRGB::Red;      // First LED
+  leds[9] = CRGB::Purple;
+  leds[50] = CRGB::Green;   // LED #50
+  leds[100] = CRGB::Blue;   // LED #100
+  leds[255] = CRGB::White;  // Last LED
+  FastLED.show();
+  delay(2000);
+  
+  // Example 2: Light up LEDs by XY coordinates
+  FastLED.clear();
+  leds[XY(0, 0)] = CRGB::Red;      // Top-left corner
+  leds[XY(31, 0)] = CRGB::Green;   // Top-right corner
+  leds[XY(0, 7)] = CRGB::Blue;     // Bottom-left corner
+  leds[XY(31, 7)] = CRGB::Yellow;  // Bottom-right corner
+  leds[XY(15, 3)] = CRGB::Purple;  // Center-ish
+  FastLED.show();
+  delay(2000);
+  
+  // Example 3: Draw a horizontal line at row 4
+  FastLED.clear();
+  for (int x = 0; x < WIDTH; x++) {
+    leds[XY(x, 4)] = CRGB::Cyan;
+  }
+  FastLED.show();
+  delay(2000);
+  
+  // Example 4: Draw a vertical line at column 10
+  FastLED.clear();
+  for (int y = 0; y < HEIGHT; y++) {
+    leds[XY(10, y)] = CRGB::Magenta;
+  }
+  FastLED.show();
+  delay(2000);
+  
+  // Example 5: Set individual pixels with custom RGB values
+  FastLED.clear();
+  leds[XY(5, 2)] = CRGB(255, 0, 0);    // Pure red (R, G, B)
+  leds[XY(10, 2)] = CRGB(0, 255, 0);   // Pure green
+  leds[XY(15, 2)] = CRGB(0, 0, 255);   // Pure blue
+  leds[XY(20, 2)] = CRGB(255, 128, 0); // Orange
+  leds[XY(25, 2)] = CRGB(128, 0, 255); // Purple
+  FastLED.show();
+  delay(2000);
+  
+}
+
+
+/* 
+Say "HI" by brute force using arrays (serpentine wiring) (Static)
+
+#include <FastLED.h>
+
+#define LED_PIN     13
+#define WIDTH       32
+#define HEIGHT      8
+#define NUM_LEDS    (WIDTH * HEIGHT)
+
+CRGB leds[NUM_LEDS];
+
+int XY(int x, int y) {
+  if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
+    return -1;
+  }
+  
+  if (y % 2 == 0) {
+    return y * WIDTH + x;
+  } else {
+    return y * WIDTH + (WIDTH - 1 - x);
+  }
+}
+
+void setup() {
+FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setBrightness(5);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+ // Example 1: Light up specific LEDs by array index
+  FastLED.clear();
+  leds[0] = leds[1]= leds[2] = leds[3] = leds[4] = leds[5] = leds[6] = leds[7] = CRGB::Red; 
+  leds[32] = leds[33]= leds[34] = leds[35] = leds[36] = leds[37] = leds[38] = leds[39] = CRGB::Red; 
+  leds[12] = leds[19] = leds[28] = CRGB::Red;
+  leds[48] = leds[63]= leds[64] = CRGB::Purple; 
+  leds[55] = leds[56]= leds[71] = CRGB::Purple; 
+  leds[62] = leds[61]= leds[60] = leds[59] = leds[58] = leds[57]= CRGB::Purple;
+  FastLED.show();
+  delay(2000);
+}
+*/
