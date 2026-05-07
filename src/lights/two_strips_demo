@@ -1,0 +1,53 @@
+#include <FastLED.h>
+
+#define LED_PIN_1     A0
+#define LED_PIN_2     A2
+#define NUM_LEDS_1    100  // Unified: Array size and loop limit must match
+#define NUM_LEDS_2    100
+#define BRIGHTNESS    20
+#define LED_TYPE      WS2812B
+#define COLOR_ORDER   GRB
+
+CRGB leds1[NUM_LEDS_1];
+CRGB leds2[NUM_LEDS_2];
+
+void setup() {
+  FastLED.addLeds<LED_TYPE, LED_PIN_1, COLOR_ORDER>(leds1, NUM_LEDS_1);
+  FastLED.addLeds<LED_TYPE, LED_PIN_2, COLOR_ORDER>(leds2, NUM_LEDS_2);
+  FastLED.setBrightness(BRIGHTNESS);
+}
+
+void loop() {
+  // We call these every 50ms so they don't happen instantly
+  EVERY_N_MILLISECONDS(50) {
+    fillWipe1();
+    fillWipe2();
+    FastLED.show(); // One show command updates both strips
+  }
+}
+
+void fillWipe1() {
+  static int i = 0;
+  static bool forward = true;
+  
+  if (forward) {
+    leds1[i++] = CRGB::Red;
+    if (i >= NUM_LEDS_1) forward = false;
+  } else {
+    leds1[--i] = CRGB::White;
+    if (i <= 0) forward = true;
+  }
+}
+
+void fillWipe2() {
+  static int j = 0; // Changed to 'j' to avoid confusion with fillWipe1
+  static bool forward2 = true;
+  
+  if (forward2) {
+    leds2[j++] = CRGB::Blue;
+    if (j >= NUM_LEDS_2) forward2 = false;
+  } else {
+    leds2[--j] = CRGB::White;
+    if (j <= 0) forward2 = true;
+  }
+}

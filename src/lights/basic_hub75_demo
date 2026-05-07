@@ -1,0 +1,36 @@
+#include <Adafruit_GFX.h>   
+#include <RGBmatrixPanel.h> 
+
+#define CLK 8
+#define LAT 10
+#define OE  9
+#define A   A0
+#define B   A1
+#define C   A2
+
+// Last argument 'false' means no double-buffering (saves RAM)
+RGBmatrixPanel matrix(A, B, C, CLK, LAT, OE, false);
+
+const char str[] = "32x16 MATRIX ACTIVE";
+int16_t textX = matrix.width();
+int16_t textMin = sizeof(str) * -6; // Approx 6 pixels per char
+
+void setup() {
+  matrix.begin();
+  matrix.setTextWrap(false); 
+  matrix.setTextSize(1);
+}
+
+void loop() {
+  matrix.fillScreen(0); // Clear frame
+  
+  // Set color (Red, Green, Blue: 0-7)
+  matrix.setTextColor(matrix.Color333(0, 7, 0)); 
+  matrix.setCursor(textX, 4);
+  matrix.print(str);
+
+  if((--textX) < textMin) textX = matrix.width();
+
+  // On a Nano, a small delay helps keep the multiplexing stable
+  delay(40); 
+}
